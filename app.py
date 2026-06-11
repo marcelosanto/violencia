@@ -95,10 +95,23 @@ if ano_selecionado != "Todos":
     df_f_filtrado = df_f_filtrado[df_f_filtrado['Ano'] == ano_selecionado]
 
 if municipio_selecionado != "Todos":
-    df_v_filtrado = df_v_filtrado[df_v_filtrado['MUNICÍPIO']
-                                  == municipio_selecionado]
-    df_f_filtrado = df_f_filtrado[df_f_filtrado['MUNICÍPIO']
-                                  == municipio_selecionado]
+    if 'MUNICÍPIO' in df_v_filtrado.columns:
+        df_v_filtrado = df_v_filtrado[df_v_filtrado['MUNICÍPIO']
+                                      == municipio_selecionado]
+
+    if 'MUNICÍPIO' in df_f_filtrado.columns:
+        df_f_filtrado = df_f_filtrado[df_f_filtrado['MUNICÍPIO']
+                                      == municipio_selecionado]
+    elif 'MUNICIPIO' in df_f_filtrado.columns:  # Caso esteja sem acento
+        df_f_filtrado = df_f_filtrado[df_f_filtrado['MUNICIPIO']
+                                      == municipio_selecionado]
+    else:
+        colunas_municipio = [c for c in df_f_filtrado.columns if 'MUNICIPIO' in c.upper(
+        ) or 'MUNICÍPIO' in c.upper()]
+        if colunas_municipio:
+            coluna_correta = colunas_municipio[0]
+            df_f_filtrado = df_f_filtrado[df_f_filtrado[coluna_correta]
+                                          == municipio_selecionado]
 
 if cor_selecionada != "Todas":
     df_v_filtrado = df_v_filtrado[df_v_filtrado['CÚTIS'] == cor_selecionada]
