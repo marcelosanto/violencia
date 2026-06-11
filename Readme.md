@@ -1,5 +1,3 @@
-## 📖 Explicação e Finalidade do Projeto
-
 ### 🎯 Finalidade (O Porquê)
 A violência de género, nomeadamente a violência doméstica e o feminicídio, é um problema estrutural e complexo que exige ações baseadas em evidências. A finalidade principal deste projeto é **democratizar a compreensão dos dados de segurança pública**, transformando milhares de linhas brutas de boletins de ocorrência num conhecimento visual, dinâmico e acessível. 
 
@@ -13,7 +11,7 @@ O projeto é um **Dashboard Interativo** (Painel de Controlo) desenvolvido em Py
 
 Através de uma interface web limpa (gerada via **Streamlit**), o utilizador não necessita de conhecimentos técnicos em planilhas ou programação para explorar os dados. O sistema utiliza a biblioteca **Pandas** nos bastidores para agrupar e cruzar informações em frações de segundo sempre que um filtro é alterado. Em seguida, a biblioteca **Plotly** renderiza os resultados em mapas geográficos e gráficos de tendência, permitindo uma investigação detalhada que vai do nível macro (o estado/ano inteiro) ao nível micro (um bairro específico num município).
 
-### 2. Preparar a Base de Dados
+### 2. Preparar a Base de Dados do Espirito Santo
 
 O sistema foi desenhado para processar os dados oficiais diretamente de dois ficheiros CSV organizados com separador ponto e vírgula (`;`) e codificação `latin1`. Certifique-se de posicionar os seguintes ficheiros exatamente na **raiz do projeto**:
 
