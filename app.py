@@ -26,15 +26,22 @@ COORDENADAS_ES = {
 def carregar_dados():
     df_violencia = pd.read_csv(
         "data/violencia-domestica.csv", sep=";", on_bad_lines="skip", encoding='latin1')
-    df_homicidios = pd.read_csv(
-        "data/homicidios-e-feminicidios.csv", sep=";", on_bad_lines="skip", encoding='latin1')
+
+    try:
+        df_homicidios = pd.read_csv(
+            "data/homicidios-e-feminicidios.csv", sep=";", on_bad_lines="skip", encoding='utf-8')
+    except:
+        df_homicidios = pd.read_csv(
+            "data/homicidios-e-feminicidios.csv", sep=";", on_bad_lines="skip", encoding='latin1')
 
     if 'MUNICÍPIO' in df_violencia.columns:
         df_violencia['MUNICÍPIO'] = df_violencia['MUNICÍPIO'].str.strip(
         ).str.upper()
-    if 'MUNICÍPIO' in df_homicidios.columns:
-        df_homicidios['MUNICÍPIO'] = df_homicidios['MUNICÍPIO'].str.strip(
-        ).str.upper()
+
+    col_mun_h = [c for c in df_homicidios.columns if 'MUNIC' in c.upper()]
+    if col_mun_h:
+        df_homicidios[col_mun_h[0]] = df_homicidios[col_mun_h[0]].astype(
+            str).str.strip().str.upper()
 
     if 'SEXO' in df_violencia.columns:
         df_mulheres = df_violencia[df_violencia['SEXO'] == 'FEMININO'].copy()
@@ -49,7 +56,8 @@ def carregar_dados():
             'M').astype(str)
 
     df_feminicidios = df_homicidios[df_homicidios['TIPIFICACAO'].str.contains(
-        'Feminicídio', case=False, na=False)].copy()
+        'Feminic', case=False, na=False)].copy()
+
     if 'DATA' in df_feminicidios.columns:
         df_feminicidios['DATA'] = pd.to_datetime(
             df_feminicidios['DATA'], format='%d/%m/%Y', errors='coerce')
@@ -127,10 +135,23 @@ col1, col2, col3 = st.columns(3)
 col1.metric("Ocorrências no Filtro",
             f"{len(df_v_filtrado):,}".replace(",", "."))
 col2.metric("Feminicídios no Filtro", f"{len(df_f_filtrado)}")
-dias_f = df_v_filtrado['DATA DO FATO'].nunique()
-col3.metric("Média Diária (Filtro)",
-            f"{(len(df_v_filtrado)/dias_f if dias_f > 0 else 0):.2f}")
 
+if ano_selecionado == "Todos":
+    data_inicial = df_mulheres['DATA DO FATO'].min()
+    data_final = df_mulheres['DATA DO FATO'].max()
+else:
+    df_ano = df_mulheres[df_mulheres['Ano'] == ano_selecionado]
+    data_inicial = df_ano['DATA DO FATO'].min()
+    data_final = df_ano['DATA DO FATO'].max()
+
+if pd.notna(data_inicial) and pd.notna(data_final):
+    total_dias_periodo = (data_final - data_inicial).days + 1
+    media_real = len(df_v_filtrado) / \
+        total_dias_periodo if total_dias_periodo > 0 else 0
+else:
+    media_real = 0
+
+col3.metric("Média Diária Real (Filtro)", f"{media_real:.2f}")
 st.divider()
 st.subheader("📍 Geolocalização e Perfil Étnico")
 
