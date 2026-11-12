@@ -1,0 +1,47 @@
+name: Gerar Dashboard e Publicar no GitHub Pages
+
+on:
+    push:
+        branches: ["main"] # Roda toda vez que houver commit na main
+    workflow_dispatch: # Permite rodar manualmente no GitHub
+
+# Permissões necessárias para publicar no GitHub Pages
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: 📥 Clonar Repositório
+              uses: actions/checkout@v4
+
+            - name: 🐍 Configurar Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
+                  cache: "pip"
+
+            - name: 📦 Instalar Dependências
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install pandas plotly
+
+            - name: ⚙️ Gerar Dashboard HTML
+              run: python gerar_dashboard.py
+
+            - name: 📂 Preparar arquivos para o Pages
+              run: |
+                  mkdir _site
+                  cp index.html _site/
+
+            - name: 🏗️ Fazer Upload do Artefato
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: _site/
+
+            - name: 🚀 Fazer o Deploy no GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4
