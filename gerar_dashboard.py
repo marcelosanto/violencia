@@ -28,26 +28,47 @@ try:
 except Exception:
     df_homicidios = pd.read_csv(file_h, sep=";", on_bad_lines="skip", encoding='latin1')
 
+# Padronizar nomes das colunas (tudo maiúsculo e resolvendo caracteres zoados de encoding)
 df_homicidios.columns = df_homicidios.columns.str.replace('ï¿½', 'Í').str.replace('', 'Í').str.upper()
 df_violencia.columns = df_violencia.columns.str.replace('ï¿½', 'Í').str.replace('', 'Í').str.upper()
 
+# Função para renomear colunas chaves de forma dinâmica
+def padronizar_colunas(df):
+    col_mun = [c for c in df.columns if 'MUNIC' in c]
+    if col_mun: df.rename(columns={col_mun[0]: 'MUNICÍPIO'}, inplace=True)
+
+    col_cor = [c for c in df.columns if 'CÚT' in c or 'CUT' in c or 'COR' in c]
+    if col_cor: df.rename(columns={col_cor[0]: 'CÚTIS'}, inplace=True)
+
+    col_sexo = [c for c in df.columns if 'SEXO' in c or 'GÊNERO' in c or 'GENERO' in c]
+    if col_sexo: df.rename(columns={col_sexo[0]: 'SEXO'}, inplace=True)
+
+    return df
+
+df_violencia = padronizar_colunas(df_violencia)
+df_homicidios = padronizar_colunas(df_homicidios)
+
+# Tratamento de Strings nos Municípios
 if 'MUNICÍPIO' in df_violencia.columns:
     df_violencia['MUNICÍPIO'] = df_violencia['MUNICÍPIO'].astype(str).str.strip().str.upper()
+if 'MUNICÍPIO' in df_homicidios.columns:
+    df_homicidios['MUNICÍPIO'] = df_homicidios['MUNICÍPIO'].astype(str).str.strip().str.upper()
 
-col_mun_h = [c for c in df_homicidios.columns if 'MUNIC' in c.upper()]
-if col_mun_h:
-    df_homicidios['MUNICÍPIO'] = df_homicidios[col_mun_h[0]].astype(str).str.strip().str.upper()
+# Filtro de Mulheres
+df_mulheres = df_violencia[df_violencia.get('SEXO', pd.Series()).isin(['FEMININO', 'TRANSEXUAL', '2 - FEMININO', '2 - Feminino'])].copy() if 'SEXO' in df_violencia.columns else df_violencia.copy()
 
-df_mulheres = df_violencia[df_violencia.get('SEXO', pd.Series()).isin(['FEMININO', 'TRANSEXUAL'])].copy() if 'SEXO' in df_violencia.columns else df_violencia.copy()
-
-if 'DATA DO FATO' in df_mulheres.columns:
-    df_mulheres['DATA DO FATO'] = pd.to_datetime(df_mulheres['DATA DO FATO'], format='%d/%m/%Y', errors='coerce')
+# Tratamento de Datas (Violência)
+col_data_v = [c for c in df_mulheres.columns if 'DATA' in c]
+if col_data_v:
+    df_mulheres['DATA DO FATO'] = pd.to_datetime(df_mulheres[col_data_v[0]], format='%d/%m/%Y', errors='coerce')
     df_mulheres['Ano-Mes'] = df_mulheres['DATA DO FATO'].dt.to_period('M').astype(str)
 
-col_tipificacao = [c for c in df_homicidios.columns if 'TIPIFICA' in c.upper()]
+# Filtro de Feminicídios
+col_tipificacao = [c for c in df_homicidios.columns if 'TIPIFICA' in c]
 df_feminicidios = df_homicidios[df_homicidios[col_tipificacao[0]].str.contains('Feminic', case=False, na=False)].copy() if col_tipificacao else df_homicidios.iloc[0:0].copy()
 
-col_data_h = [c for c in df_feminicidios.columns if c in ['DATA', 'DATA DO FATO']]
+# Tratamento de Datas (Homicídios)
+col_data_h = [c for c in df_feminicidios.columns if 'DATA' in c]
 if col_data_h:
     df_feminicidios['DATA'] = pd.to_datetime(df_feminicidios[col_data_h[0]], format='%d/%m/%Y', errors='coerce')
     df_feminicidios['Ano-Mes'] = df_feminicidios['DATA'].dt.to_period('M').astype(str)
