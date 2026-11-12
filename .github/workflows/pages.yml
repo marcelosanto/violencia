@@ -2,17 +2,22 @@ name: Gerar Dashboard e Publicar no GitHub Pages
 
 on:
     push:
-        branches: ["main"] # Roda toda vez que houver commit na main
-    workflow_dispatch: # Permite rodar manualmente no GitHub
+        branches: ["main"]
+    workflow_dispatch:
 
-# Permissões necessárias para publicar no GitHub Pages
+# Impede que dois deploys rodem ao mesmo tempo e dupliquem artefatos
+concurrency:
+    group: "pages"
+    cancel-in-progress: true
+
 permissions:
     contents: read
     pages: write
     id-token: write
 
 jobs:
-    build-and-deploy:
+    # Job 1: Prepara os dados e gera o HTML
+    build:
         runs-on: ubuntu-latest
         steps:
             - name: 📥 Clonar Repositório
@@ -42,6 +47,14 @@ jobs:
               with:
                   path: _site/
 
+    # Job 2: Pega o artefato gerado e publica no site
+    deploy:
+        needs: build
+        runs-on: ubuntu-latest
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        steps:
             - name: 🚀 Fazer o Deploy no GitHub Pages
               id: deployment
               uses: actions/deploy-pages@v4
